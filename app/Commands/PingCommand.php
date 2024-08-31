@@ -33,15 +33,8 @@ class PingCommand extends Command
      */
     public function handle($message, $args)
     {
-        $guilds = Guild::all();
-
-        foreach ($guilds as $key => $value) {
-            $vc = $this->discord()->getVoiceClient($value->guild_id);
-            $list = UserQueue::where('guild_id', $value->id)->first();
-
-            $song = json_decode($list->queue);
-
-            dd($song[0]);
-        }
+        $this
+            ->message("👋 Hello {$message->author->username}!")
+            ->reply($message);
     }
 }
