@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Guild;
 use App\Models\UserQueue;
+use Discord\Voice\VoiceClient;
 use Laracord\Services\Service;
 
 class QueueSwitch extends Service
@@ -39,13 +40,11 @@ class QueueSwitch extends Service
     private function handleGuildVoiceClient(Guild $guild): void
     {
         $voiceClient = $this->getVoiceClient($guild->guild_id);
-        $queue = $this->getQueueForGuild($guild->guild_id);
+        $queue = $this->getQueueForGuild($guild->id);
 
         if ($voiceClient && $queue) {
             if (!$voiceClient->isSpeaking()) {
                 $this->playNextSongFromQueue($voiceClient, $queue);
-            } else {
-                $voiceClient->stop();
             }
         }
     }
@@ -54,7 +53,7 @@ class QueueSwitch extends Service
      * Get the voice client for the specified guild.
      *
      * @param string $guildId
-     * @return VoiceClient|null
+     * @return \Discord\Voice\VoiceClient|null
      */
     private function getVoiceClient(string $guildId): ?VoiceClient
     {
