@@ -8,9 +8,6 @@ use Discord\Parts\Interactions\Interaction;
 use Discord\Voice\VoiceClient;
 use Illuminate\Support\Facades\Http;
 use Laracord\Commands\Command;
-use React\Promise\PromiseInterface;
-
-use function React\Async\await;
 
 class Play extends Command
 {
@@ -51,9 +48,10 @@ class Play extends Command
      */
     public function handle($message, $args)
     {
-        $search = $args[0] . " " . ($args[1] ?? null);
+        $search = implode(" ", $args);
 
         if ($message->member->getVoiceChannel()) {
+
             $response = Http::retry(3, 100)->withQueryParameters([
                 'limit' => '1',
                 'page' => '0',

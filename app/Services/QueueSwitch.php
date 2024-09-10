@@ -23,25 +23,30 @@ class QueueSwitch extends Service
         foreach ($guilds as $key => $value) {
             $vc = $this->discord()->getVoiceClient($value->guild_id);
             $list = UserQueue::where('guild_id', $value->id)->first();
-            
-            if ($vc && !empty($list->queue)) {
+
+            if (!empty($list->queue) && $vc->isSpeaking()) {
+
                 $song = json_decode($list->queue, true);
 
-                if ($vc && !$vc->isSpeaking()) {
+                $vc->setBitrate(320000);
+                $vc->playFile($song[0]);
 
-                    $vc->setBitrate(320000);
-                    $vc->playFile($song[0]);
+                array_shift($song);
 
-                    array_shift($song);
+                if (empty($song)) {
 
-                    if (empty($song)) {
-                        $list->delete();
-                    } else {
-                        $list->queue = json_encode($song);
-                        $list->save();
-                    }
+                    $list->delete();
+
+                } else {
+                    $list->queue = json_encode($song);
+                    $list->save();
                 }
+
+            } elseif ($vc) {
+
+                $vc->stop();
             }
+
         }
     }
 }

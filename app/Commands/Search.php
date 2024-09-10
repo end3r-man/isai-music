@@ -50,7 +50,7 @@ class Search extends Command
     public function handle($message, $args)
     {
 
-        $search = $args[0] . " " . ($args[1] ?? null);
+        $search = implode(" ", $args);
 
         if ($message->member->getVoiceChannel()) {
             $response = Http::retry(3, 100)->withQueryParameters([
