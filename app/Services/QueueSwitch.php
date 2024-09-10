@@ -16,37 +16,81 @@ class QueueSwitch extends Service
     /**
      * Handle the service.
      */
+    /**
+     * Manage the voice clients and song queues for all guilds.
+     *
+     * @return void
+     */
     public function handle(): void
     {
         $guilds = Guild::all();
 
-        foreach ($guilds as $key => $value) {
-            $vc = $this->discord()->getVoiceClient($value->guild_id);
-            $list = UserQueue::where('guild_id', $value->id)->first();
+        foreach ($guilds as $guild) {
+            $this->handleGuildVoiceClient($guild);
+        }
+    }
 
-            if (!empty($list->queue) && $vc->isSpeaking()) {
+    /**
+     * Handle the voice client and song queue for a specific guild.
+     *
+     * @param Guild $guild
+     * @return void
+     */
+    private function handleGuildVoiceClient(Guild $guild): void
+    {
+        $voiceClient = $this->getVoiceClient($guild->guild_id);
+        $queue = $this->getQueueForGuild($guild->guild_id);
 
-                $song = json_decode($list->queue, true);
-
-                $vc->setBitrate(320000);
-                $vc->playFile($song[0]);
-
-                array_shift($song);
-
-                if (empty($song)) {
-
-                    $list->delete();
-
-                } else {
-                    $list->queue = json_encode($song);
-                    $list->save();
-                }
-
-            } elseif ($vc) {
-
-                $vc->stop();
+        if ($voiceClient && $queue) {
+            if (!$voiceClient->isSpeaking()) {
+                $this->playNextSongFromQueue($voiceClient, $queue);
+            } else {
+                $voiceClient->stop();
             }
+        }
+    }
 
+    /**
+     * Get the voice client for the specified guild.
+     *
+     * @param string $guildId
+     * @return VoiceClient|null
+     */
+    private function getVoiceClient(string $guildId): ?VoiceClient
+    {
+        return $this->discord->getVoiceClient($guildId);
+    }
+
+    /**
+     * Get the song queue for the specified guild.
+     *
+     * @param string $guildId
+     * @return UserQueue|null
+     */
+    private function getQueueForGuild(string $guildId): ?UserQueue
+    {
+        return UserQueue::where('guild_id', $guildId)->first();
+    }
+
+    /**
+     * Play the next song from the queue and update the queue.
+     *
+     * @param VoiceClient $voiceClient
+     * @param UserQueue $queue
+     * @return void
+     */
+    private function playNextSongFromQueue(VoiceClient $voiceClient, UserQueue $queue): void
+    {
+        $song = json_decode($queue->queue, true);
+        $voiceClient->setBitrate(320000);
+        $voiceClient->playFile($song[0]);
+        array_shift($song);
+
+        if (empty($song)) {
+            $queue->delete();
+        } else {
+            $queue->queue = json_encode($song);
+            $queue->save();
         }
     }
 }
