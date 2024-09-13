@@ -57,7 +57,7 @@ class Search extends Command
                 'limit' => '5',
                 'page' => '0',
                 'query' => $search,
-            ])->get('https://saavn.dev/api/search/songs');
+            ])->get('https://jio-api-ten.vercel.app/api/search/songs');
 
             $songs = json_decode($response)->data->results;
 
@@ -128,7 +128,7 @@ class Search extends Command
     protected function HandlePlay(Interaction $interaction): void
     {
 
-        $response = Http::get("https://saavn.dev/api/songs/{$interaction->data->values[0]}");
+        $response = Http::get("https://jio-api-ten.vercel.app/api/songs/{$interaction->data->values[0]}");
 
         if ($response) {
             $data = json_decode($response)->data[0];

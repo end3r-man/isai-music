@@ -56,7 +56,7 @@ class Play extends Command
                 'limit' => '1',
                 'page' => '0',
                 'query' => $search,
-            ])->get('https://saavn.dev/api/search/songs');
+            ])->get('https://jio-api-ten.vercel.app/api/search/songs');
 
             $this->HandlePlay($response, $message);
         } else {
